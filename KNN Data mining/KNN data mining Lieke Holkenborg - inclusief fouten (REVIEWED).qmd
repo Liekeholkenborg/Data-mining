@@ -1,0 +1,134 @@
+---
+title: "Assignment - KNN Data Mining"
+author: 
+  - Lieke Holkenborg - Author
+  - Anne-Sophie Josée - Reviewer
+date: 21-09-2022 
+format: html
+editor: visual
+---
+
+## Setup - Installing packages
+
+```{r}
+#install.packages(tidyverse)
+#install.packages(class)
+#install.packages(caret)
+library(tidyverse)
+library(class)
+library(caret)
+```
+
+## Read data
+
+```{r}
+url <- "https://raw.githubusercontent.com/HAN-M3DM-Data-Mining/assignments/master/datasets/KNN-hcvdat0.csv"
+rawDF <- read_csv(url)
+```
+
+## Data understanding
+
+```{r}
+str(rawDF))
+```
+
+## Data preparation
+
+```{r}
+#randomizing order of the dataset
+cleanDF <- rawDF[sample(1:nrow(rawDF)),]
+```
+
+```{r}
+##Excluding first colom because it is not a variable
+cleanDF <- cleanDF[-1]
+head(cleanDF)
+```
+
+## Data understanding
+
+```{r}
+cntDiag <- table(cleanDF$Category)
+propCat <- round(prop.table(cntDiag) * 100 , digits = 1)
+
+cntDiag
+propCat
+```
+
+## Renaming categories
+
+```{r}
+cleanDF$Category <- factor(cleanDF$Category, levels = c("0=Blood Donor","0s=suspect Blood Donor", "1=Hepatitis", "2=Fibrosis", "3=Cirrhosis"), labels = c("Able to give blood", "Not able to give blood", "Not able to give blood", "Not able to give blood", "Not able to give blood")) %>% relevel ("Not able to give blood")
+head(cleanDF, 10)
+```
+
+# Data understanding: changing the proportions
+
+```{r}
+cntDiag2 <- table(cleanDF$Category)
+propCat2 <- round(prop.table(cntDiag2) * 100 , digits = 1)
+                  
+cntDiag2
+propCat1
+```
+
+## Analyzing variables
+
+```{r}
+summary(cleanDF[c("ALB", "ALP", "ALT", "AST", "BIL", "CHE", "CHOL", "CREA", "GGT", "PROT")])
+```
+
+## Replacing NA Values
+
+```{r}
+cleanDF[is.na(cleanDF)] <- 0
+summary(cleanDF[c("ALB", "ALP", "ALT", "AST", "BIL", "CHE", "CHOL", "CREA", "GGT", "PROT")])
+```
+
+## Normalizing variables
+
+```{r}
+normalize <- function(x) {
+  return ((x- min(x)) / (max() - min(x))
+}
+```
+
+```{r}
+nCols <- dim(cleanDF)[2]
+cleanDF_n <- sapply(4:nCols,
+                    function(x) {
+  normalize(cleanDF[,x])
+}) %>% as.data.frame()
+
+summary(cleanDF_n[c("ALB", "ALP", "ALT", "AST", "BIL", "CHE", "CHOL", "CREA", "GGT", "PROT")])
+```
+
+```{r}
+trainDF_feat <- cleanDF_n[1:515, ]
+testDF_feat <- cleanDF_n[516:615, ]
+
+trainDF_labels <- cleanDF[1:515, 1]
+testDF_labels <- cleanDF[516:615, 1]
+```
+
+## Modeling and Evaluation
+
+```{r}
+cleanDF_test_pred <- knn(train = as.matrix(trainDF_feat), test = as.matrix(testDF_feat), cl = 
+as.matrix(trainDF_labels), k = 21)
+head(cleanDF_test_pred)
+```
+
+```{r}
+confusionMatrix(cleanDF_test_pred, testDF_labels[[1]], positive = NULL, dnn = c("Prediction", "True"))
+```
+
+## Review
+
+Error 1: In 'Data understanding' line 32 it should be str(rawDF) instead str(rawDF))
+
+Error 2: In 'Data understanding: changing the proportions' line 72 it says propCat1, this should be propCat2.
+
+Error 3: In 'Normalizing variables' line 92 it should be (max(x) - min(x))) instead of (max() - min(x)) on the end.
+
+Error 4: In 'Modeling and Evaluation' line 123 there is missing a comma behind cleanDF_test_pred. So it should be cleanDF_test_pred, instead of cleanDF_test_pred
